@@ -6,6 +6,7 @@ use App\Entity\Matches;
 use App\Entity\Sponsor;
 use App\Form\MatchesType;
 use App\Repository\MatchesRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Faker\Factory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,7 +42,25 @@ class MatchesController extends AbstractController
             'form' => $form,
         ]);
     }
+    #[Route('/populate', name: 'app_matches_populate', methods: ['GET'])]
+    public function populate(EntityManagerInterface $entityManager): Response
+    {
+        $faker = Factory::create();
+        for ($i=0;$i<10;$i++) {
+            $matches = new matches();
+            $matches->setTeam1($faker->name);
+            $matches->setTeam2($faker->numberBetween(1000000,10000000));
+            $matches->setScore1();
+            $matches->setScore2();
+            $matches->setDatetime();
+            $matches->setReferee();
 
+            $entityManager->persist($matches);
+
+            $entityManager->flush();
+            }
+        return new Response('Saved match with id' . $matches->getId());
+    }
     #[Route('/{id}', name: 'app_matches_show', methods: ['GET'])]
     public function show(Matches $match): Response
     {

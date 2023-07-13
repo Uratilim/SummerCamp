@@ -52,6 +52,14 @@ class TeamController extends AbstractController
             $team->setYearOfEst($faker->dateTimeThisYear);
             $team->setMotto($faker->companyEmail);
 
+            for($j=0;$j<11;$j++){
+                $member = new Member();
+                $member->setName($faker->name);
+                $member->setAge($faker->numberBetween(18,42));
+                $member->setRole($faker->title);
+                $member->setTeamId($team);
+            }
+
             $entityManager->persist($team);
 
             $entityManager->flush();
