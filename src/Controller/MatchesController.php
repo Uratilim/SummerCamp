@@ -41,6 +41,27 @@ class MatchesController extends AbstractController
             'form' => $form,
         ]);
     }
+    #[Route('/populate', name: 'app_matches_populate', methods: ['GET'])]
+    public function populate(EntityManagerInterface $entityManager, ValidatorInterface $validator): Response
+    {
+        $faker = Factory::create();
+        for ($i=0;$i<10;$i++) {
+            $matches = new matches();
+            $matches->setTeam1();
+            $matches->setTeam2();
+            $matches->setScore1();
+            $matches->setScore2();
+            $matches->setDatetime();
+            $matches->setReferee();
+
+            $entityManager->persist($matches);
+
+            $entityManager->flush();
+
+
+        }
+        return new Response('Saved match with id' . $matches->getId());
+    }
 
     #[Route('/{id}', name: 'app_matches_show', methods: ['GET'])]
     public function show(Matches $match): Response
@@ -78,21 +99,7 @@ class MatchesController extends AbstractController
         return $this->redirectToRoute('app_matches_index', [], Response::HTTP_SEE_OTHER);
     }
 
-    public function createMatch(): Response
-    {
-        $a = array();
-        $faker = Factory::create();
-        for ($i=0;$i<10;$i++) {
-            $matches = new Matches();
-            $matches->setTeam1($faker->name);
-            $matches->setTeam2($faker->adress);
-            $matches->setScore1();
-            $matches->setScore2();
-            $matches->setDatetime();
-            $matches->setReferee();
-        }
-        return new Response('Saved new sponsor with id ' . $matches->getId());
-    }
+
 
     public function calculateScores(): Response
     {

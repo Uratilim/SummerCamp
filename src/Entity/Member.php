@@ -30,7 +30,6 @@ class Member
 
 
 
-
     public function getId(): ?int
     {
         return $this->id;

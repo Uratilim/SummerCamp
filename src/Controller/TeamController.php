@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Member;
 use App\Entity\Team;
 use App\Form\TeamType;
 use App\Repository\TeamRepository;
@@ -41,23 +42,44 @@ class TeamController extends AbstractController
             'form' => $form,
         ]);
     }
+
     #[Route('/populate', name: 'app_team_populate', methods: ['GET'])]
-    public function createTeam(EntityManagerInterface $entityManager): Response
+    public function populate(EntityManagerInterface $entityManager,ValidatorInterface $validator): Response
     {
+
         $faker = Factory::create();
-        for ($i=0;$i<10;$i++) {
+        for ($i = 0; $i < 10; $i++) {
             $team = new Team();
             $team->setName($faker->name);
             $team->setNickname($faker->address);
             $team->setYearOfEst($faker->dateTimeThisYear);
             $team->setMotto($faker->companyEmail);
+            $errors = $validator->validate($team);
 
             $entityManager->persist($team);
 
-            $entityManager->flush();
+
+            for ($j = 0; $j < 10; $j++) {
+                $member = new Member();
+                $member->setName($faker->name);
+                $member->setAge($faker->numberBetween(18, 42));
+                $member->setRole($faker->name);
+                $member->setTeamId($team);
+                $errors = $validator->validate($member);
+
+                $entityManager->persist($member);
+
+                $entityManager->flush();
+            }
         }
-        return new Response('Saved new team with id ' . $team->getId());
+        if (count($errors) > 0) {
+            return $this->render('team/validation.html.twig', [
+                'errors' => $errors,
+            ]);
+        }
+        return new Response('Saved member with id' . $team->getId());
     }
+
     #[Route('/{id}', name: 'app_team_show', methods: ['GET'])]
     public function show(Team $team): Response
     {
@@ -83,10 +105,11 @@ class TeamController extends AbstractController
             'form' => $form,
         ]);
     }
+
     #[Route('/{id}', name: 'app_team_delete', methods: ['POST'])]
     public function delete(Request $request, Team $team, TeamRepository $teamRepository): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$team->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $team->getId(), $request->request->get('_token'))) {
             $teamRepository->remove($team, true);
         }
 

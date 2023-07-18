@@ -6,12 +6,17 @@ use App\Entity\Member;
 use App\Entity\Team;
 use App\Form\MemberType;
 use App\Repository\MemberRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Faker\Factory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+interface Populate
+{
+    public function populate(EntityManagerInterface $entityManager);
+}
 #[Route('/member')]
 class MemberController extends AbstractController
 {
@@ -41,7 +46,6 @@ class MemberController extends AbstractController
             'form' => $form,
         ]);
     }
-
     #[Route('/{id}', name: 'app_member_show', methods: ['GET'])]
     public function show(Member $member): Response
     {
@@ -78,15 +82,5 @@ class MemberController extends AbstractController
         return $this->redirectToRoute('app_member_index', [], Response::HTTP_SEE_OTHER);
     }
 
-    public function createMember(): Response
-    {
-        $faker = Factory::create();
-        for ($i=0;$i<10;$i++) {
-            $member = new Member();
-            $member->setName($faker->name);
-            $member->setAge($faker->adress);
-            $member->setRole($faker->date);
-        }
-        return new Response('Saved new team with id ' . $member->getId());
-    }
+
 }

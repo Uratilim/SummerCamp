@@ -17,12 +17,16 @@ class Team
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\Length(max: 30)]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
     private ?string $nickname = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\DateTime(
+
+    )]
     private ?\DateTimeInterface $year_of_est = null;
 
     #[ORM\Column(length: 1000, nullable: true)]
