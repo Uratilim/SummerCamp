@@ -56,6 +56,14 @@ class TeamController extends AbstractController
             $team->setMotto($faker->companyEmail);
             $errors = $validator->validate($team);
 
+            for($j=0;$j<11;$j++){
+                $member = new Member();
+                $member->setName($faker->name);
+                $member->setAge($faker->numberBetween(18,42));
+                $member->setRole($faker->title);
+                $member->setTeamId($team);
+            }
+
             $entityManager->persist($team);
 
 
