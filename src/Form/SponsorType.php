@@ -16,10 +16,6 @@ class SponsorType extends AbstractType
         $builder
             ->add('name')
             ->add('contract_value')
-            ->add('team_id', EntityType::class, [
-                'class' => Team::class,
-                'choice_label' => 'name',
-            ])
         ;
     }
 

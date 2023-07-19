@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Generated Matches{% endblock %}
+
+{% block body %}
+    <h1>Generated Matches</h1>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Team 1</th>
+            <th>Team 2</th>
+            <th>Date</th>
+            <th>Referee</th>
+            <th>Score</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for match in generatedMatches %}
+            <tr>
+                <td>{{ match.team1.name }}</td>
+                <td>{{ match.team2.name }}</td>
+                <td>{{ match.datetime|date('Y-m-d H:i:s') }}</td>
+                <td>{{ match.referee }}</td>
+                <td>{{ match.score1 }} - {{ match.score2 }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

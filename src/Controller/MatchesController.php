@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Controller;
+
 use App\Entity\Team;
 use App\Entity\Matches;
 use App\Entity\Sponsor;
 use App\Form\MatchesType;
 use App\Repository\MatchesRepository;
+use App\Repository\TeamRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Faker\Factory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -42,27 +44,62 @@ class MatchesController extends AbstractController
             'form' => $form,
         ]);
     }
-    #[Route('/populate', name: 'app_matches_populate', methods: ['GET'])]
-    public function populate(EntityManagerInterface $entityManager, ValidatorInterface $validator): Response
+
+    #[Route('/generate-matches', name: 'app_matches_generate', methods: ['GET'])]
+    public function generateMatches(TeamRepository $teamRepository, EntityManagerInterface $entityManager): Response
     {
-        $faker = Factory::create();
-        for ($i=0;$i<10;$i++) {
-            $matches = new matches();
-            $matches->setTeam1();
-            $matches->setTeam2();
-            $matches->setScore1();
-            $matches->setScore2();
-            $matches->setDatetime();
-            $matches->setReferee();
+        // Fetch all teams from the repository
+        $teams = $entityManager->getRepository(Team::class)->findAll();
 
-            $entityManager->persist($matches);
+        // Shuffle the teams to randomize the match pairings
+        shuffle($teams);
 
-            $entityManager->flush();
+        // Create an array to store the matches
+        $matches = [];
 
+        // Generate matches
+        $totalTeams = count($teams);
+        for ($i = 0; $i < $totalTeams - 1; $i++) {
+            for ($j = $i + 1; $j < $totalTeams; $j++) {
+                $team1 = $teams[$i];
+                $team2 = $teams[$j];
 
+                // Check if the teams have already played against each other
+                if ($this->haveTeamsPlayed($team1, $team2, $matches)) {
+                    continue;
+                }
+
+                // Generate match scores (example logic, adjust as needed)
+                $score1 = random_int(0, 5);
+                $score2 = random_int(0, 5);
+
+                // Create a new match entity
+                $match = new Matches();
+                $match->setTeam1($team1);
+                $match->setTeam2($team2);
+                $match->setScore1($score1);
+                $match->setScore2($score2);
+
+                // Update the ranking based on the match results
+                $this->updateRanking($team1, $team2, $score1, $score2);
+
+                // Save the match entity to the database
+                $entityManager->persist($match);
+
+                // Add the match to the matches array
+                $matches[] = $match;
+            }
         }
-        return new Response('Saved match with id' . $matches->getId());
+
+        // Flush the changes to the database
+        $entityManager->flush();
+
+        // Render the generated matches template
+        return $this->render('matches/generated_matches.html.twig', [
+            'matches' => $matches,
+        ]);
     }
+
     public function calculateRanking(MatchesRepository $matchesRepository): Response
     {
         $matches = $matchesRepository->findAll();
@@ -74,16 +111,16 @@ class MatchesController extends AbstractController
             $team2 = $match->getTeam2();
             $score1 = $match->getScore1();
             $score2 = $match->getScore2();
-            
+
             if ($score1 > $score2) {
-                $this->updateRanking($ranking, $team1, 3);
-                $this->updateRanking($ranking, $team2, 2);
+                $this->updateRanking($ranking, $team1->getId(), 3);
+                $this->updateRanking($ranking, $team2->getId(), 2);
             } elseif ($score1 < $score2) {
-                $this->updateRanking($ranking, $team1, 2);
-                $this->updateRanking($ranking, $team2, 3);
+                $this->updateRanking($ranking, $team1->getId(), 2);
+                $this->updateRanking($ranking, $team2->getId(), 3);
             } else {
-                $this->updateRanking($ranking, $team1, 2);
-                $this->updateRanking($ranking, $team2, 2);
+                $this->updateRanking($ranking, $team1->getId(), 2);
+                $this->updateRanking($ranking, $team2->getId(), 2);
             }
         }
 
@@ -103,12 +140,33 @@ class MatchesController extends AbstractController
         if (!isset($ranking[$teamId])) {
             $ranking[$teamId] = [
                 'team' => $team,
-                'points' => $points,
+                'points' => 0,
             ];
-        } else {
-            $ranking[$teamId]['points'] += $points;
         }
+
+        $ranking[$teamId]['points'] += $points;
     }
+
+
+
+
+
+    private function haveTeamsPlayed(Team $team1, Team $team2, array $matches): bool
+    {
+        foreach ($matches as $match) {
+            $existingTeam1 = $match->getTeam1();
+            $existingTeam2 = $match->getTeam2();
+
+            if (($existingTeam1 === $team1 && $existingTeam2 === $team2) ||
+                ($existingTeam1 === $team2 && $existingTeam2 === $team1)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
     #[Route('/{id}', name: 'app_matches_show', methods: ['GET'])]
     public function show(Matches $match): Response
     {
@@ -138,13 +196,12 @@ class MatchesController extends AbstractController
     #[Route('/{id}', name: 'app_matches_delete', methods: ['POST'])]
     public function delete(Request $request, Matches $match, MatchesRepository $matchesRepository): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$match->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $match->getId(), $request->request->get('_token'))) {
             $matchesRepository->remove($match, true);
         }
 
         return $this->redirectToRoute('app_matches_index', [], Response::HTTP_SEE_OTHER);
     }
-
 
 
     public function calculateScores(): Response
