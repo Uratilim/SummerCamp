@@ -3,6 +3,8 @@
 namespace App\Form;
 
 use App\Entity\Member;
+use App\Entity\Team;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -15,7 +17,10 @@ class MemberType extends AbstractType
             ->add('name')
             ->add('role')
             ->add('age')
-            ->add('team_id')
+            ->add('team_id', EntityType::class, [
+                'class' => Team::class,
+                'choice_label' => 'name',
+            ])
         ;
     }
 

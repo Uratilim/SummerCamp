@@ -25,7 +25,7 @@ class Member
     private ?int $age = null;
 
     #[ORM\ManyToOne(inversedBy: 'players')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'team_id_id', referencedColumnName: 'id', nullable: false)]
     private ?Team $Team_id = null;
 
 

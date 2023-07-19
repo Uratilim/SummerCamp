@@ -17,6 +17,7 @@ class TeamType extends AbstractType
             ->add('year_of_est')
             ->add('motto')
             ->add('sponsors')
+            ->add('Team_id')
         ;
     }
 

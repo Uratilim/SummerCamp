@@ -44,7 +44,7 @@ class TeamController extends AbstractController
     }
 
     #[Route('/populate', name: 'app_team_populate', methods: ['GET'])]
-    public function populate(EntityManagerInterface $entityManager,ValidatorInterface $validator): Response
+    public function populate(EntityManagerInterface $entityManager): Response
     {
 
         $faker = Factory::create();
@@ -54,18 +54,8 @@ class TeamController extends AbstractController
             $team->setNickname($faker->address);
             $team->setYearOfEst($faker->dateTimeThisYear);
             $team->setMotto($faker->companyEmail);
-            $errors = $validator->validate($team);
-
-            for($j=0;$j<11;$j++){
-                $member = new Member();
-                $member->setName($faker->name);
-                $member->setAge($faker->numberBetween(18,42));
-                $member->setRole($faker->title);
-                $member->setTeamId($team);
-            }
 
             $entityManager->persist($team);
-
 
             for ($j = 0; $j < 10; $j++) {
                 $member = new Member();
@@ -73,18 +63,13 @@ class TeamController extends AbstractController
                 $member->setAge($faker->numberBetween(18, 42));
                 $member->setRole($faker->name);
                 $member->setTeamId($team);
-                $errors = $validator->validate($member);
 
                 $entityManager->persist($member);
 
-                $entityManager->flush();
             }
         }
-        if (count($errors) > 0) {
-            return $this->render('team/validation.html.twig', [
-                'errors' => $errors,
-            ]);
-        }
+        $entityManager->flush();
+
         return new Response('Saved member with id' . $team->getId());
     }
 
